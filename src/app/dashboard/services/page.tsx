@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/Toast'
 import type { Service } from '@/lib/types'
 import styles from './services.module.css'
 
@@ -49,6 +50,7 @@ export default function ServicesPage() {
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
   const supabase = createClient()
+  const { toast } = useToast()
 
   const fetchServices = async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -91,10 +93,10 @@ export default function ServicesPage() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { alert('Sessão expirada. Faça login novamente.'); return }
+      if (!user) { toast.error('Sessão expirada. Faça login novamente.'); return }
 
       const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single()
-      if (!profile?.company_id) { alert('Perfil não encontrado.'); return }
+      if (!profile?.company_id) { toast.error('Perfil não encontrado.'); return }
 
       const payload = {
         company_id: profile.company_id,
@@ -118,15 +120,16 @@ export default function ServicesPage() {
 
       if (error) {
         console.error('Erro ao salvar serviço:', error)
-        alert(`Erro ao salvar: ${error.message}`)
+        toast.error(`Erro ao salvar: ${error.message}`)
         return
       }
 
       resetForm()
       fetchServices()
+      toast.success(editId ? 'Serviço atualizado!' : 'Serviço criado com sucesso!')
     } catch (err) {
       console.error('Erro inesperado:', err)
-      alert('Erro inesperado ao salvar o serviço.')
+      toast.error('Erro inesperado ao salvar o serviço.')
     } finally {
       setSaving(false)
     }
@@ -134,8 +137,10 @@ export default function ServicesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja excluir este serviço?')) return
-    await supabase.from('services').delete().eq('id', id)
+    const { error } = await supabase.from('services').delete().eq('id', id)
+    if (error) { toast.error(`Erro ao excluir: ${error.message}`); return }
     fetchServices()
+    toast.success('Serviço excluído.')
   }
 
   const getPricingLabel = (service: Service) => {

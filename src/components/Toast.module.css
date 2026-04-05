@@ -1,0 +1,150 @@
+.container {
+  position: fixed;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  pointer-events: none;
+  max-width: 420px;
+  width: calc(100% - 3rem);
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.25rem;
+  border-radius: 12px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  pointer-events: all;
+  animation: slideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.toast:hover {
+  transform: translateX(-4px);
+}
+
+.exit {
+  animation: slideOut 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.message {
+  flex: 1;
+  font-weight: 500;
+  color: #fff;
+}
+
+.close {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.close:hover {
+  color: #fff;
+}
+
+/* Variants */
+.success {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.success .icon {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+}
+
+.error {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.error .icon {
+  background: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+.warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.warning .icon {
+  background: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+
+.info {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.info .icon {
+  background: rgba(59, 130, 246, 0.25);
+  color: #60a5fa;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    max-width: none;
+  }
+
+  .toast {
+    font-size: 0.85rem;
+    padding: 0.75rem 1rem;
+  }
+}
