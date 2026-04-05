@@ -89,29 +89,47 @@ export default function ServicesPage() {
     e.preventDefault()
     setSaving(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user!.id).single()
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { alert('Sessão expirada. Faça login novamente.'); return }
 
-    const payload = {
-      company_id: profile!.company_id,
-      name: form.name.trim(),
-      description: form.description.trim() || null,
-      unit: form.unit,
-      unit_price: parseFloat(form.unit_price) || 0,
-      category: form.category.trim() || null,
-      pricing_type: form.pricing_type,
-      base_price: form.pricing_type === 'per_km' ? (parseFloat(form.base_price) || 0) : 0,
+      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single()
+      if (!profile?.company_id) { alert('Perfil não encontrado.'); return }
+
+      const payload = {
+        company_id: profile.company_id,
+        name: form.name.trim(),
+        description: form.description.trim() || null,
+        unit: form.unit,
+        unit_price: parseFloat(form.unit_price) || 0,
+        category: form.category.trim() || null,
+        pricing_type: form.pricing_type,
+        base_price: form.pricing_type === 'per_km' ? (parseFloat(form.base_price) || 0) : 0,
+      }
+
+      let error
+      if (editId) {
+        const result = await supabase.from('services').update(payload).eq('id', editId)
+        error = result.error
+      } else {
+        const result = await supabase.from('services').insert(payload)
+        error = result.error
+      }
+
+      if (error) {
+        console.error('Erro ao salvar serviço:', error)
+        alert(`Erro ao salvar: ${error.message}`)
+        return
+      }
+
+      resetForm()
+      fetchServices()
+    } catch (err) {
+      console.error('Erro inesperado:', err)
+      alert('Erro inesperado ao salvar o serviço.')
+    } finally {
+      setSaving(false)
     }
-
-    if (editId) {
-      await supabase.from('services').update(payload).eq('id', editId)
-    } else {
-      await supabase.from('services').insert(payload)
-    }
-
-    resetForm()
-    setSaving(false)
-    fetchServices()
   }
 
   const handleDelete = async (id: string) => {
