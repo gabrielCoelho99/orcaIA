@@ -1,0 +1,21 @@
+.dashboardLayout {
+  display: flex;
+  min-height: 100dvh;
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  padding: var(--space-xl) var(--space-2xl);
+  padding-bottom: var(--space-3xl);
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .mainContent {
+    margin-left: 0;
+    padding: var(--space-lg);
+    padding-bottom: 100px;
+  }
+}
