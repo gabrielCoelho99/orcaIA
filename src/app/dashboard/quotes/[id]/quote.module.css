@@ -132,3 +132,26 @@
   color: var(--text-secondary);
   line-height: 1.6;
 }
+
+/* Edit mode */
+.removeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-tertiary);
+  font-size: 1rem;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all var(--transition-fast);
+  line-height: 1;
+}
+
+.removeBtn:hover {
+  color: var(--color-danger, #ef4444);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.itemsTable .input {
+  padding: 0.4rem 0.5rem;
+  font-size: 0.8125rem;
+}

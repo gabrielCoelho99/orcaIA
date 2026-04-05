@@ -89,6 +89,16 @@ export default function ServicesPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!form.name.trim()) {
+      toast.warning('Preencha o nome do serviço.')
+      return
+    }
+    if (!form.unit_price || parseFloat(form.unit_price) <= 0) {
+      toast.warning('Informe um preço válido.')
+      return
+    }
+
     setSaving(true)
 
     try {

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useToast } from '@/components/Toast'
 import styles from './chat.module.css'
 
 type Message = {
@@ -26,6 +27,7 @@ type QuoteData = {
   discount: number
   total: number
   payment_terms: string
+  validity_days: number
   notes: string
 }
 
@@ -55,6 +57,7 @@ export default function NewQuotePage() {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
   const supabase = createClient()
+  const { toast } = useToast()
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -172,13 +175,14 @@ export default function NewQuotePage() {
         total: quoteData.total,
         status: 'draft',
         payment_terms: quoteData.payment_terms || null,
+        validity_days: quoteData.validity_days || 30,
         notes: quoteData.notes || null,
       })
       .select()
       .single()
 
     if (quoteError || !quote) {
-      alert('Erro ao salvar orçamento.')
+      toast.error('Erro ao salvar orçamento.')
       setSavingQuote(false)
       return
     }

@@ -45,8 +45,11 @@ REGRAS:
 3. Use o catálogo de serviços da empresa para calcular valores.
 4. Para serviços por km (entrega, frete, etc): pergunte a distância ou os pontos de partida/destino. Calcule: valor = preço_base + (km × preço_por_km).
 5. Para serviços por m², m linear, hora, etc: pergunte as quantidades/dimensões necessárias.
-6. Quando tiver informações suficientes, apresente uma tabela resumo do orçamento.
-7. Sempre que apresentar o orçamento completo, inclua no final da mensagem um bloco JSON assim:
+6. OBRIGATÓRIO: Antes de gerar o orçamento, pergunte ao usuário:
+   - As condições de pagamento (ex: "à vista", "50% entrada + 50% na entrega", "parcelado em 3x", etc.)
+   - A validade do orçamento em dias (ex: 7, 15, 30 dias). Se não informar, use 30 dias como padrão.
+7. Quando tiver TODAS as informações (cliente, serviços, quantidades, pagamento e validade), apresente o orçamento completo.
+8. Sempre que apresentar o orçamento completo, inclua no final da mensagem um bloco JSON assim:
 
 \`\`\`json
 {
@@ -66,15 +69,16 @@ REGRAS:
   "subtotal": 100.00,
   "discount": 0,
   "total": 100.00,
-  "payment_terms": "À vista ou condições a combinar",
+  "payment_terms": "Condições de pagamento informadas pelo usuário",
+  "validity_days": 30,
   "notes": ""
 }
 \`\`\`
 
-8. Se o usuário pedir ajustes (desconto, adicionar/remover item), faça e apresente novamente.
-9. Nunca invente serviços que não estão no catálogo. Se o serviço não existir, informe e sugira cadastrar.
-10. Seja proativo em sugerir serviços relacionados do catálogo.
-11. Use as unidades corretas para cada serviço (km, m², hora, etc).`
+9. Se o usuário pedir ajustes (desconto, adicionar/remover item, mudar pagamento), faça e apresente novamente.
+10. Nunca invente serviços que não estão no catálogo. Se o serviço não existir, informe e sugira cadastrar.
+11. Seja proativo em sugerir serviços relacionados do catálogo.
+12. Use as unidades corretas para cada serviço (km, m², hora, etc).`
 }
 
 export async function POST(req: NextRequest) {
