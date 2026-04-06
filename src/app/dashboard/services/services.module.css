@@ -4,10 +4,11 @@
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* Prevent top cropping */
   justify-content: center;
   z-index: var(--z-modal);
-  padding: var(--space-lg);
+  padding: 5vh var(--space-lg);
+  overflow-y: auto; /* Let overlay scroll */
 }
 
 .formCard {
@@ -17,8 +18,7 @@
   padding: var(--space-2xl);
   width: 100%;
   max-width: 540px;
-  max-height: 90vh;
-  overflow-y: auto;
+  margin: auto; /* Center reliably without top-cutoff */
   animation: fadeIn 0.3s ease;
 }
 
