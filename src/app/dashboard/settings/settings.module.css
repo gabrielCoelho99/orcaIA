@@ -57,6 +57,17 @@
   grid-column: span 2;
 }
 
+.proBadge {
+  background: rgba(0, 212, 170, 0.1);
+  color: var(--color-accent);
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
 .formActions {
   display: flex;
   justify-content: flex-end;

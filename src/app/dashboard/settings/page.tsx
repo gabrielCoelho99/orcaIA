@@ -25,7 +25,7 @@ export default function SettingsPage() {
   const router = useRouter()
 
   // Editable state
-  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', email: '', address: '', business_type: '' })
+  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', email: '', address: '', business_type: '', cnpj: '', logo_url: '' })
   const [profileForm, setProfileForm] = useState({ full_name: '' })
 
   useEffect(() => {
@@ -58,6 +58,8 @@ export default function SettingsPage() {
           email: comp.email || '',
           address: comp.address || '',
           business_type: comp.business_type || '',
+          cnpj: comp.cnpj || '',
+          logo_url: comp.logo_url || '',
         })
       }
       setSubscription(sub)
@@ -76,6 +78,8 @@ export default function SettingsPage() {
       email: companyForm.email.trim() || null,
       address: companyForm.address.trim() || null,
       business_type: companyForm.business_type.trim(),
+      cnpj: companyForm.cnpj.trim() || null,
+      logo_url: companyForm.logo_url.trim() || null,
     }).eq('id', company.id)
 
     if (error) toast.error(`Erro: ${error.message}`)
@@ -171,6 +175,21 @@ export default function SettingsPage() {
               <label>Endereço</label>
               <input className="input" value={companyForm.address} onChange={e => setCompanyForm(p => ({ ...p, address: e.target.value }))} placeholder="Rua, número, cidade" />
             </div>
+            
+            <div className={`input-group ${styles.formGridFull}`}>
+              <label>CNPJ <span className={styles.proBadge}>Opcional</span></label>
+              <input className="input" value={companyForm.cnpj} onChange={e => setCompanyForm(p => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0001-00" />
+            </div>
+            
+            {plan === 'pro' && (
+              <div className={`input-group ${styles.formGridFull}`}>
+                <label>URL da Logo <span className={styles.proBadge}>Plano Pro</span></label>
+                <input className="input" value={companyForm.logo_url} onChange={e => setCompanyForm(p => ({ ...p, logo_url: e.target.value }))} placeholder="https://exemplo.com/logo.png" />
+                <small style={{color: 'var(--text-tertiary)', fontSize: '0.75rem', marginTop: '4px'}}>
+                  Insira o link direto de uma imagem para ela aparecer em seus orçamentos PDF/Online.
+                </small>
+              </div>
+            )}
           </div>
           <div className={styles.formActions}>
             <button className="btn btn-accent" onClick={handleSaveCompany} disabled={saving}>

@@ -5,6 +5,7 @@ export interface Company {
   phone: string | null
   email: string | null
   address: string | null
+  cnpj: string | null
   logo_url: string | null
   created_at: string
 }
