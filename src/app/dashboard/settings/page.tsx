@@ -235,7 +235,15 @@ export default function SettingsPage() {
                   onClick={async () => {
                     setCheckoutLoading(true);
                     try {
-                      const res = await fetch('/api/checkout', { method: 'POST' });
+                      const { data: { session } } = await supabase.auth.getSession();
+                      
+                      const res = await fetch('/api/checkout', { 
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${session?.access_token}`,
+                          'Content-Type': 'application/json'
+                        }
+                      });
                       const data = await res.json();
                       if (res.ok && data.init_point) {
                         window.location.href = data.init_point;
