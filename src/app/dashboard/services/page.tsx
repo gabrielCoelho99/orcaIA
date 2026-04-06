@@ -49,6 +49,7 @@ export default function ServicesPage() {
   const [editId, setEditId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(INITIAL_FORM)
   const [saving, setSaving] = useState(false)
+  const [quota, setQuota] = useState<{ allowed: boolean; used: number; limit: number } | null>(null)
   const supabase = createClient()
   const { toast } = useToast()
 
@@ -56,6 +57,11 @@ export default function ServicesPage() {
     const { data: { user } } = await supabase.auth.getUser()
     const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user!.id).single()
     const { data } = await supabase.from('services').select('*').eq('company_id', profile!.company_id).order('created_at', { ascending: false })
+    
+    const { canCreateService } = await import('@/lib/subscription')
+    const serviceQuota = await canCreateService(profile!.company_id)
+    setQuota(serviceQuota)
+    
     setServices(data || [])
     setLoading(false)
   }
@@ -182,7 +188,17 @@ export default function ServicesPage() {
           <h1 className="page-title">Serviços</h1>
           <p className="page-subtitle">Cadastre os serviços que sua empresa oferece</p>
         </div>
-        <button className="btn btn-accent" onClick={() => { resetForm(); setShowForm(true) }}>
+        <button 
+          className="btn btn-accent" 
+          onClick={() => { 
+            if (quota && !quota.allowed) {
+              toast.error('Limite de serviços atingido para o plano atual. Faça upgrade no menu Configurações.')
+              return
+            }
+            resetForm(); 
+            setShowForm(true) 
+          }}
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
           </svg>

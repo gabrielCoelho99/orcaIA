@@ -70,3 +70,46 @@ export interface ChatMessage {
   content: string
   created_at: string
 }
+
+export interface Subscription {
+  id: string
+  company_id: string
+  plan: 'free' | 'pro'
+  status: 'active' | 'canceled' | 'past_due'
+  quotes_limit: number
+  services_limit: number
+  quotes_used_this_month: number
+  current_period_start: string
+  current_period_end: string
+  created_at: string
+  updated_at: string
+}
+
+export const PLAN_DETAILS = {
+  free: {
+    name: 'Grátis',
+    price: 0,
+    quotes_limit: 5,
+    services_limit: 3,
+    features: [
+      '5 orçamentos por mês',
+      '3 serviços cadastrados',
+      'Chat com IA',
+      'PDF básico',
+    ],
+  },
+  pro: {
+    name: 'Profissional',
+    price: 49.90,
+    quotes_limit: 999999,
+    services_limit: 999999,
+    features: [
+      'Orçamentos ilimitados',
+      'Serviços ilimitados',
+      'Chat com IA avançado',
+      'PDF com logo personalizada',
+      'Relatórios (em breve)',
+      'Suporte prioritário',
+    ],
+  },
+} as const

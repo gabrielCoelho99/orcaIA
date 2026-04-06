@@ -53,6 +53,7 @@ export default function NewQuotePage() {
   const [isStreaming, setIsStreaming] = useState(false)
   const [quoteData, setQuoteData] = useState<QuoteData | null>(null)
   const [savingQuote, setSavingQuote] = useState(false)
+  const [quotaReached, setQuotaReached] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const router = useRouter()
@@ -62,6 +63,23 @@ export default function NewQuotePage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  useEffect(() => {
+    const checkQuota = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user.id).single()
+      if (profile?.company_id) {
+        const { canCreateQuote } = await import('@/lib/subscription')
+        const { allowed } = await canCreateQuote(profile.company_id)
+        if (!allowed) {
+          setQuotaReached(true)
+          setMessages([{ role: 'assistant', content: '❌ Você atingiu o limite de orçamentos do seu plano neste mês. Faça o upgrade para o plano Profissional em Configurações para criar orçamentos ilimitados.' }])
+        }
+      }
+    }
+    checkQuota()
+  }, [])
 
   const handleSend = async () => {
     if (!input.trim() || isStreaming) return
@@ -210,6 +228,10 @@ export default function NewQuotePage() {
     }))
     await supabase.from('chat_messages').insert(chatMessages)
 
+    // Increment quota usage
+    const { incrementQuoteUsage } = await import('@/lib/subscription')
+    await incrementQuoteUsage(profile!.company_id)
+
     router.push(`/dashboard/quotes/${quote.id}`)
   }
 
@@ -254,17 +276,17 @@ export default function NewQuotePage() {
         <textarea
           ref={inputRef}
           className={styles.textarea}
-          placeholder="Descreva o serviço para o orçamento..."
+          placeholder={quotaReached ? "Limite de orçamentos atingido." : "Descreva o serviço para o orçamento..."}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={1}
-          disabled={isStreaming}
+          disabled={isStreaming || quotaReached}
         />
         <button
           className={`btn btn-accent btn-icon ${styles.sendBtn}`}
           onClick={handleSend}
-          disabled={!input.trim() || isStreaming}
+          disabled={!input.trim() || isStreaming || quotaReached}
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>

@@ -87,6 +87,14 @@ export default function OnboardingPage() {
       return
     }
 
+    // Create free subscription for the new company
+    await supabase.from('subscriptions').insert({
+      company_id: company.id,
+      plan: 'free',
+      quotes_limit: 5,
+      services_limit: 3,
+    })
+
     router.push('/dashboard')
     router.refresh()
   }
