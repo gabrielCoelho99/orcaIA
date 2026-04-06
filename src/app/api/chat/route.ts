@@ -1,6 +1,11 @@
 import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
+import { SupabaseClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
+const pdf = require('pdf-parse')
+import mammoth from 'mammoth'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
@@ -18,7 +23,36 @@ interface ChatMessage {
   content: string
 }
 
-function buildSystemPrompt(companyName: string, businessType: string, services: ServiceData[]) {
+async function getTemplateText(supabase: SupabaseClient, path: string) {
+  try {
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from('company_templates')
+      .download(path)
+
+    if (downloadError) {
+      console.error('Error downloading template:', downloadError)
+      return null
+    }
+
+    const buffer = Buffer.from(await fileData.arrayBuffer())
+
+    if (path.toLowerCase().endsWith('.pdf')) {
+      const data = await pdf(buffer)
+      return data.text
+    } else if (path.toLowerCase().endsWith('.docx')) {
+      const result = await mammoth.extractRawText({ buffer })
+      return result.value
+    } else {
+      // Plain text
+      return buffer.toString('utf-8')
+    }
+  } catch (err) {
+    console.error('Error parsing template:', err)
+    return null
+  }
+}
+
+function buildSystemPrompt(companyName: string, businessType: string, services: ServiceData[], templateText?: string | null) {
   const serviceList = services
     .map(s => {
       let priceInfo = `R$ ${Number(s.unit_price).toFixed(2)} por ${s.unit}`
@@ -33,13 +67,21 @@ function buildSystemPrompt(companyName: string, businessType: string, services: 
     })
     .join('\n')
 
-  return `Você é o assistente de orçamentos da empresa "${companyName}" (${businessType}).
+  let prompt = `Você é o assistente de orçamentos da empresa "${companyName}" (${businessType}).
 Seu trabalho é ajudar a criar orçamentos profissionais conversando com o usuário.
 
 CATÁLOGO DE SERVIÇOS:
-${serviceList || 'Nenhum serviço cadastrado ainda.'}
+${serviceList || 'Nenhum serviço cadastrado ainda.'}`
 
-REGRAS:
+  if (templateText) {
+    prompt += `\n\nESTRUTURA OBRIGATÓRIA (MODELO DE REFERÊNCIA):
+Este usuário faz orçamentos seguindo um padrão específico. Você DEVE extrair a estrutura, o tom de voz e os termos de fechamento do conteúdo abaixo e replicar no orçamento final:
+---
+${templateText}
+---`
+  }
+
+  prompt += `\n\nREGRAS:
 1. Sempre responda em português brasileiro, de forma profissional mas amigável.
 2. Faça perguntas para entender o que o cliente precisa (nome do cliente, serviços, quantidades).
 3. Use o catálogo de serviços da empresa para calcular valores.
@@ -48,7 +90,7 @@ REGRAS:
 6. OBRIGATÓRIO: Antes de gerar o orçamento, pergunte ao usuário:
    - As condições de pagamento (ex: "à vista", "50% entrada + 50% na entrega", "parcelado em 3x", etc.)
    - A validade do orçamento em dias (ex: 7, 15, 30 dias). Se não informar, use 30 dias como padrão.
-7. Quando tiver TODAS as informações (cliente, serviços, quantidades, pagamento e validade), apresente o orçamento completo.
+7. Quando tiver TODAS as informações (cliente, serviços, quantidades, pagamento e validade), apresente o orçamento completo de acordo com o modelo de referência (se houver).
 8. Sempre que apresentar o orçamento completo, inclua no final da mensagem um bloco JSON assim:
 
 \`\`\`json
@@ -79,6 +121,8 @@ REGRAS:
 10. Nunca invente serviços que não estão no catálogo. Se o serviço não existir, informe e sugira cadastrar.
 11. Seja proativo em sugerir serviços relacionados do catálogo.
 12. Use as unidades corretas para cada serviço (km, m², hora, etc).`
+
+  return prompt
 }
 
 export async function POST(req: NextRequest) {
@@ -101,16 +145,21 @@ export async function POST(req: NextRequest) {
     }
 
     const [{ data: company }, { data: services }] = await Promise.all([
-      supabase.from('companies').select('name, business_type').eq('id', profile.company_id).single(),
+      supabase.from('companies').select('name, business_type, quote_template_url').eq('id', profile.company_id).single(),
       supabase.from('services').select('*').eq('company_id', profile.company_id).eq('active', true),
     ])
+
+    const templateText = company?.quote_template_url 
+      ? await getTemplateText(supabase, company.quote_template_url)
+      : null
 
     const { messages } = await req.json() as { messages: ChatMessage[] }
 
     const systemPrompt = buildSystemPrompt(
       company?.name || 'Empresa',
       company?.business_type || 'serviços',
-      (services || []) as ServiceData[]
+      (services || []) as ServiceData[],
+      templateText
     )
 
     // Build Groq messages: system + conversation history

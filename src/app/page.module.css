@@ -181,6 +181,143 @@
   line-height: 1.6;
 }
 
+/* Pricing */
+.pricing {
+  padding: var(--space-3xl) var(--space-lg);
+  max-width: var(--max-content);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: var(--space-3xl);
+}
+
+.sectionTitle {
+  font-size: 2.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: var(--space-sm);
+}
+
+.sectionSubtitle {
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+}
+
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-xl);
+}
+
+.priceCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  transition: all var(--transition-base);
+  position: relative;
+}
+
+.priceCard:hover {
+  border-color: var(--border-color-hover);
+  transform: translateY(-8px);
+}
+
+.priceCard h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.priceValue {
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+}
+
+.priceValue span {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: 0;
+}
+
+.priceFeatures {
+  list-style: none;
+  font-size: 0.9375rem;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  margin-bottom: auto;
+}
+
+.priceFeatures li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.priceFeatures li::before {
+  content: '✓';
+  color: var(--color-accent);
+  font-weight: 900;
+}
+
+.popular {
+  border-color: var(--color-accent);
+  background: linear-gradient(180deg, rgba(0, 212, 170, 0.05) 0%, var(--bg-secondary) 100%);
+  transform: scale(1.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.popular:hover {
+  border-color: var(--color-accent);
+  transform: scale(1.05) translateY(-8px);
+}
+
+.popularBadge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-accent);
+  color: var(--text-inverse);
+  padding: 0.25rem 1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.agency {
+  border-color: var(--color-primary);
+  background: linear-gradient(180deg, rgba(10, 102, 194, 0.05) 0%, var(--bg-secondary) 100%);
+}
+
+.agencyBadge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-primary);
+  color: white;
+  padding: 0.25rem 1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
 /* Footer */
 .footer {
   text-align: center;
@@ -188,4 +325,6 @@
   color: var(--text-tertiary);
   font-size: 0.8125rem;
   border-top: 1px solid var(--border-color);
+  margin-top: var(--space-3xl);
 }
+

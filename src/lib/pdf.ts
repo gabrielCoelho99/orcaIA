@@ -1,8 +1,15 @@
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-import type { Quote, QuoteItem } from './types'
+import type { Quote, QuoteItem, Company } from './types'
 
-export function generateQuotePDF(quote: Quote, items: QuoteItem[], company: any) {
+// Add type for better dev experience and to avoid 'any'
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: {
+    finalY: number
+  }
+}
+
+export function generateQuotePDF(quote: Quote, items: QuoteItem[], company: Company) {
   const doc = new jsPDF()
 
   // Colors
@@ -103,7 +110,7 @@ export function generateQuotePDF(quote: Quote, items: QuoteItem[], company: any)
   })
 
   // Totals
-  const finalY = (doc as any).lastAutoTable.finalY + 8
+  const finalY = (doc as unknown as jsPDFWithAutoTable).lastAutoTable.finalY + 8
 
   doc.setFontSize(10)
   doc.setTextColor(100, 116, 139)

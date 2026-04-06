@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import { Portal } from '@/components/Portal'
@@ -54,7 +54,7 @@ export default function ServicesPage() {
   const supabase = createClient()
   const { toast } = useToast()
 
-  const fetchServices = async () => {
+  const fetchServices = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     const { data: profile } = await supabase.from('profiles').select('company_id').eq('id', user!.id).single()
     const { data } = await supabase.from('services').select('*').eq('company_id', profile!.company_id).order('created_at', { ascending: false })
@@ -65,9 +65,9 @@ export default function ServicesPage() {
     
     setServices(data || [])
     setLoading(false)
-  }
+  }, [supabase])
 
-  useEffect(() => { fetchServices() }, [])
+  useEffect(() => { fetchServices() }, [fetchServices])
 
   const resetForm = () => {
     setForm(INITIAL_FORM)
@@ -145,9 +145,10 @@ export default function ServicesPage() {
       resetForm()
       fetchServices()
       toast.success(editId ? 'Serviço atualizado!' : 'Serviço criado com sucesso!')
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err)
       console.error('Erro inesperado:', err)
-      alert(`Erro inesperado no Javascript: ${err?.message || JSON.stringify(err)}`)
+      alert(`Erro inesperado no Javascript: ${errorMessage}`)
       toast.error('Erro inesperado ao salvar o serviço.')
     } finally {
       setSaving(false)
@@ -316,11 +317,14 @@ export default function ServicesPage() {
           ))}
         </div>
       ) : (
-        <div className="empty-state">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-          <h3>Nenhum serviço cadastrado</h3>
-          <p>Cadastre seus serviços para que a IA possa usá-los nos orçamentos.</p>
-          <button className="btn btn-accent" style={{ marginTop: '1rem' }} onClick={() => setShowForm(true)}>Cadastrar Primeiro Serviço</button>
+        <div className="empty-state card-glass">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-primary)' }}>
+            <path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18z"/>
+            <path d="M8 12h8"/><path d="M12 8v8"/>
+          </svg>
+          <h3>O catálogo de serviços está vazio</h3>
+          <p>Você precisa de pelo menos 1 serviço cadastrado para que a IA possa gerar seus orçamentos.</p>
+          <button className="btn btn-primary" style={{ marginTop: '1.5rem', minWidth: '220px' }} onClick={() => setShowForm(true)}>Cadastrar Primeiro Serviço</button>
         </div>
       )}
     </div>

@@ -5,15 +5,15 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
-import type { Quote, QuoteItem } from '@/lib/types'
 import { generateQuotePDF } from '@/lib/pdf'
+import type { Quote, QuoteItem, Company } from '@/lib/types'
 import styles from './quote.module.css'
 
 export default function QuoteDetailPage() {
   const { id } = useParams()
   const [quote, setQuote] = useState<Quote | null>(null)
   const [items, setItems] = useState<QuoteItem[]>([])
-  const [company, setCompany] = useState<any>(null)
+  const [company, setCompany] = useState<Company | null>(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -39,7 +39,7 @@ export default function QuoteDetailPage() {
       setLoading(false)
     }
     fetchData()
-  }, [id])
+  }, [id, supabase])
 
   const startEditing = () => {
     if (!quote) return

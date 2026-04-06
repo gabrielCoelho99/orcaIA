@@ -7,6 +7,8 @@ export interface Company {
   address: string | null
   cnpj: string | null
   logo_url: string | null
+  quote_template_url: string | null
+  owner_id: string | null
   created_at: string
 }
 
@@ -75,7 +77,7 @@ export interface ChatMessage {
 export interface Subscription {
   id: string
   company_id: string
-  plan: 'free' | 'pro'
+  plan: 'free' | 'pro' | 'agency'
   status: 'active' | 'canceled' | 'past_due'
   quotes_limit: number
   services_limit: number
@@ -111,6 +113,18 @@ export const PLAN_DETAILS = {
       'PDF com logo personalizada',
       'Relatórios (em breve)',
       'Suporte prioritário',
+    ],
+  },
+  agency: {
+    name: 'Agência / Contador',
+    price: 149.90,
+    quotes_limit: 999999,
+    services_limit: 999999,
+    features: [
+      'Até 5 empresas / clientes',
+      'Orçamentos ilimitados',
+      'Upload do seu Timbrado (PDF/Doc)',
+      'Suporte Premium Dedicado',
     ],
   },
 } as const

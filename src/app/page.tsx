@@ -93,6 +93,56 @@ export default function Home() {
             <p>Orçamento profissional com logo, tabela de serviços e termos de pagamento.</p>
           </div>
         </section>
+
+        {/* Pricing */}
+        <section className={styles.pricing} id="precos">
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>Planos para todos os tamanhos</h2>
+            <p className={styles.sectionSubtitle}>Escolha o plano ideal para a sua empresa crescer.</p>
+          </div>
+          <div className={styles.pricingGrid}>
+            {/* Free Card */}
+            <div className={styles.priceCard}>
+              <h3>Grátis</h3>
+              <div className={styles.priceValue}>R$ 0<span>/mês</span></div>
+              <ul className={styles.priceFeatures}>
+                <li>3 serviços cadastrados</li>
+                <li>5 orçamentos p/ mês</li>
+                <li>Chat com IA</li>
+                <li>Design padrão</li>
+              </ul>
+              <Link href="/signup" className="btn btn-ghost w-full">Começar Agora</Link>
+            </div>
+            {/* Pro Card */}
+            <div className={`${styles.priceCard} ${styles.popular}`}>
+              <div className={styles.popularBadge}>Mais Popular</div>
+              <h3>Profissional</h3>
+              <div className={styles.priceValue}>R$ 49,90<span>/mês</span></div>
+              <ul className={styles.priceFeatures}>
+                <li>Orçamentos ilimitados</li>
+                <li>Serviços ilimitados</li>
+                <li>Chat com IA avançado</li>
+                <li>Logo personalizada no PDF</li>
+                <li>Suporte prioritário</li>
+              </ul>
+              <Link href="/signup" className="btn btn-accent w-full">Assinar Pro</Link>
+            </div>
+            {/* Agency Card */}
+            <div className={`${styles.priceCard} ${styles.agency}`}>
+              <div className={styles.agencyBadge}>Para Multi-Empresas</div>
+              <h3>Agência / Contador</h3>
+              <div className={styles.priceValue}>R$ 149,90<span>/mês</span></div>
+              <ul className={styles.priceFeatures}>
+                <li>Até 5 empresas / clientes</li>
+                <li>Tudo do plano Profissional</li>
+                <li>Upload de Timbrado próprio</li>
+                <li>Suporte Premium Dedicado</li>
+                <li>Relatórios Consolidados</li>
+              </ul>
+              <Link href="/signup" className="btn btn-primary w-full">Assinar Agência</Link>
+            </div>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}

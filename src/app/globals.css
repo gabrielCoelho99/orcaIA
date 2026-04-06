@@ -103,9 +103,17 @@ a {
   text-decoration: none;
 }
 
+button,
+a,
+select,
+input[type="checkbox"],
+input[type="radio"],
+label[for] {
+  cursor: pointer;
+}
+
 button {
   font-family: inherit;
-  cursor: pointer;
   border: none;
   background: none;
   font-size: inherit;
@@ -331,6 +339,12 @@ img {
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.03em;
+  transition: all var(--transition-fast);
+  cursor: default;
+}
+
+.badge:hover {
+  filter: brightness(1.2);
 }
 
 .badge-draft {
@@ -385,25 +399,30 @@ img {
   text-align: center;
   padding: var(--space-3xl) var(--space-xl);
   color: var(--text-tertiary);
+  width: 100%;
 }
 
 .empty-state svg {
-  width: 64px;
-  height: 64px;
-  margin-bottom: var(--space-md);
-  opacity: 0.4;
+  width: 80px;
+  height: 80px;
+  margin-bottom: var(--space-lg);
+  opacity: 0.8;
+  filter: drop-shadow(0 0 10px rgba(0, 0, 0, 0.2));
 }
 
 .empty-state h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: var(--space-xs);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: var(--space-sm);
+  letter-spacing: -0.01em;
 }
 
 .empty-state p {
-  font-size: 0.875rem;
-  max-width: 360px;
+  font-size: 1rem;
+  max-width: 420px;
+  color: var(--text-secondary);
+  line-height: 1.6;
 }
 
 /* Stat Cards */

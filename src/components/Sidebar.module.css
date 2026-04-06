@@ -34,6 +34,74 @@
 .companyInfo {
   display: flex;
   flex-direction: column;
+  gap: 0.25rem;
+}
+
+.switcherContainer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+}
+
+.switcherContainer:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.companyAvatar {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+  color: #000;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.switcherWrapper {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.companySwitcher {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0;
+  padding-right: 1.5rem;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.switcherChevron {
+  position: absolute;
+  right: 0;
+  pointer-events: none;
+  color: var(--text-tertiary);
+  display: flex;
+  align-items: center;
+}
+
+.singleCompany {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
 }
 
 .companyName {
@@ -48,6 +116,8 @@
 .userName {
   font-size: 0.75rem;
   color: var(--text-tertiary);
+  margin-top: 0.25rem;
+  padding-left: 2.5rem;
 }
 
 .nav {

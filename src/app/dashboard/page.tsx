@@ -93,13 +93,16 @@ export default async function DashboardPage() {
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-              <polyline points="14 2 14 8 20 8"/>
+          <div className="empty-state card-glass">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: 'var(--color-accent)' }}>
+              <path d="M12 3v19M5 8l7-7 7 7M15 15l-3 3-3-3"/>
+              <rect width="18" height="18" x="3" y="3" rx="2"/>
             </svg>
-            <h3>Nenhum orçamento ainda</h3>
-            <p>Comece cadastrando seus serviços e depois crie seu primeiro orçamento com a IA!</p>
+            <h3>Sua jornada começa aqui</h3>
+            <p>Cadastre seus serviços e use a IA para gerar orçamentos profissionais em segundos.</p>
+            <Link href="/dashboard/quotes/new" className="btn btn-accent" style={{ marginTop: '1.5rem' }}>
+              Criar Primeiro Orçamento
+            </Link>
           </div>
         )}
       </div>

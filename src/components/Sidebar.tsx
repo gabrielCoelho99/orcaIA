@@ -46,6 +46,15 @@ const NAV_ITEMS = [
     ),
   },
   {
+    href: '/dashboard/changelog',
+    label: 'Novidades',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      </svg>
+    ),
+  },
+  {
     href: '/dashboard/settings',
     label: 'Configurações',
     icon: (
@@ -56,7 +65,17 @@ const NAV_ITEMS = [
   },
 ]
 
-export function Sidebar({ userName, companyName }: { userName: string, companyName: string }) {
+export function Sidebar({ 
+  userName, 
+  companyName, 
+  activeCompanyId, 
+  userCompanies 
+}: { 
+  userName: string, 
+  companyName: string,
+  activeCompanyId?: string,
+  userCompanies?: { id: string, name: string }[]
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -65,6 +84,19 @@ export function Sidebar({ userName, companyName }: { userName: string, companyNa
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  const handleSwitchCompany = async (companyId: string) => {
+    if (companyId === activeCompanyId) return;
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    
+    // Update active company in profile
+    await supabase.from('profiles').update({ company_id: companyId }).eq('id', user.id)
+    
+    // Reload page to reflect new company context
+    window.location.reload()
   }
 
   return (
@@ -80,7 +112,36 @@ export function Sidebar({ userName, companyName }: { userName: string, companyNa
           <span>OrcaIA</span>
         </div>
         <div className={styles.companyInfo}>
-          <span className={styles.companyName}>{companyName}</span>
+          {userCompanies && userCompanies.length > 1 ? (
+            <div className={styles.switcherContainer}>
+              <div className={styles.companyAvatar}>
+                {companyName.charAt(0).toUpperCase()}
+              </div>
+              <div className={styles.switcherWrapper}>
+                <select 
+                  className={styles.companySwitcher}
+                  value={activeCompanyId}
+                  onChange={(e) => handleSwitchCompany(e.target.value)}
+                >
+                  {userCompanies.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                <div className={styles.switcherChevron}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className={styles.singleCompany}>
+              <div className={styles.companyAvatar}>
+                {companyName.charAt(0).toUpperCase()}
+              </div>
+              <span className={styles.companyName}>{companyName}</span>
+            </div>
+          )}
           <span className={styles.userName}>{userName}</span>
         </div>
       </div>

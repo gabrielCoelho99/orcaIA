@@ -1,0 +1,46 @@
+
+> orca-ia@0.1.0 lint
+> eslint
+
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\app\api\chat\route.ts
+  25:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\app\dashboard\layout.tsx
+  32:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\app\dashboard\quotes\[id]\page.tsx
+  16:42  error    Unexpected any. Specify a different type                                                                     @typescript-eslint/no-explicit-any
+  42:6   warning  React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\app\dashboard\quotes\new\page.tsx
+  82:6  warning  React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\app\dashboard\services\page.tsx
+   70:40  warning  React Hook useEffect has a missing dependency: 'fetchServices'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  148:19  error    Unexpected any. Specify a different type                                                                          @typescript-eslint/no-explicit-any
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\components\Portal.tsx
+  14:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\components\Portal.tsx:14:5
+  12 |
+  13 |   useEffect(() => {
+> 14 |     setMounted(true)
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  15 |     return () => setMounted(false)
+  16 |   }, [])
+  17 |  react-hooks/set-state-in-effect
+
+C:\Users\morig\OneDrive\Área de Trabalho\projetos\orcaIA\src\lib\pdf.ts
+    5:77  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  106:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 10 problems (7 errors, 3 warnings)
+

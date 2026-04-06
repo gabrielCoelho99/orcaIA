@@ -80,36 +80,70 @@
 /* Plan Cards */
 .plansGrid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: var(--space-lg);
-  max-width: 700px;
+  max-width: 900px;
 }
 
 .planCard {
-  background: var(--bg-secondary);
-  border: 2px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
-  padding: var(--space-xl);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
   position: relative;
-  transition: border-color var(--transition-fast);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.planCard:hover {
+  transform: translateY(-8px);
+  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 .planCardActive {
-  border-color: var(--color-accent);
+  border: 2px solid var(--accent-primary);
+  background: rgba(0, 212, 170, 0.02);
+}
+
+.planCardAgency {
+  border-color: var(--accent-secondary);
+}
+
+.planCardAgency:hover {
+  border-color: var(--accent-secondary);
+  box-shadow: 0 20px 40px rgba(10, 102, 194, 0.2);
 }
 
 .planBadge {
   position: absolute;
-  top: -10px;
-  right: var(--space-md);
-  background: var(--color-accent);
-  color: var(--text-inverse);
-  font-size: 0.7rem;
+  top: 1rem;
+  right: 1rem;
+  background: var(--accent-primary);
+  color: #000;
+  font-size: 0.75rem;
   font-weight: 700;
-  padding: 2px 10px;
-  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.planBadgePopular {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
 }
 
 .planName {
@@ -192,7 +226,89 @@
 }
 
 .usageBarFillWarning {
-  background: linear-gradient(90deg, var(--color-warning), var(--color-error));
+  background: linear-gradient(90deg, #ff4b2b, #ff416c);
+}
+
+/* Changelog Styles */
+.changelogSection {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.changelogGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.changelogCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  transition: border-color 0.2s ease;
+}
+
+.changelogCard:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.changelogMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.versionTag {
+  color: var(--accent-primary);
+  font-weight: 700;
+  font-family: var(--font-mono);
+  background: rgba(0, 212, 170, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+}
+
+.dateTag {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.changelogTitle {
+  font-size: 1.25rem;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.changelogDesc {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+
+.featureList {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.featureList li {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.featureList li::before {
+  content: "→";
+  color: var(--accent-primary);
+  font-weight: bold;
 }
 
 /* Danger zone */
