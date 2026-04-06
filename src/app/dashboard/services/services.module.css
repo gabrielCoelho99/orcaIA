@@ -4,10 +4,11 @@
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   z-index: var(--z-modal);
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-2xl) var(--space-lg);
+  
+  /* Block layout to guarantee scrollability */
+  display: block;
   overflow-y: auto;
+  padding: 8vh var(--space-lg);
 }
 
 .formCard {
@@ -17,8 +18,9 @@
   padding: var(--space-2xl);
   width: 100%;
   max-width: 540px;
-  margin: auto; /* Centers when container is taller than content */
-  flex-shrink: 0; /* Prevents squishing and allows natural height for scrolling */
+  
+  /* Center horizontally ONLY, let vertical flow naturally */
+  margin: 0 auto; 
   animation: fadeIn 0.3s ease;
 }
 
