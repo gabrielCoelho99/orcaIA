@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
+import { Portal } from '@/components/Portal'
 import type { Service } from '@/lib/types'
 import styles from './services.module.css'
 
@@ -210,77 +211,79 @@ export default function ServicesPage() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className={styles.formOverlay} onClick={(e) => { if (e.target === e.currentTarget) resetForm() }}>
-          <div className={styles.formCard}>
-            <h2>{editId ? 'Editar Serviço' : 'Novo Serviço'}</h2>
-            <form onSubmit={handleSubmit} className={styles.form}>
-              <div className="input-group">
-                <label htmlFor="serviceName">Nome do serviço *</label>
-                <input id="serviceName" className="input" placeholder="Ex: Entrega expressa" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div className="input-group">
-                <label htmlFor="serviceDesc">Descrição</label>
-                <input id="serviceDesc" className="input" placeholder="Detalhes do serviço" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-              </div>
-
-              {/* Pricing Type Selection */}
-              <div className="input-group">
-                <label>Tipo de precificação *</label>
-                <div className={styles.pricingGrid}>
-                  {PRICING_TYPES.map((pt) => (
-                    <button
-                      key={pt.value}
-                      type="button"
-                      className={`${styles.pricingBtn} ${form.pricing_type === pt.value ? styles.pricingSelected : ''}`}
-                      onClick={() => handlePricingTypeChange(pt.value)}
-                    >
-                      <strong>{pt.label}</strong>
-                      <small>{pt.desc}</small>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Pricing Fields */}
-              <div className={styles.formRow}>
-                <div className="input-group" style={{ flex: 1 }}>
-                  <label htmlFor="servicePrice">
-                    {form.pricing_type === 'per_km' ? 'Preço por km (R$) *' : 'Preço unitário (R$) *'}
-                  </label>
-                  <input id="servicePrice" className="input" type="number" step="0.01" min="0" placeholder="0,00" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} />
-                </div>
-                <div className="input-group" style={{ flex: 1 }}>
-                  <label htmlFor="serviceUnit">Unidade *</label>
-                  <select id="serviceUnit" className="input" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}>
-                    {(UNITS[form.pricing_type] || UNITS['fixed']).map(u => <option key={u} value={u}>{u}</option>)}
-                  </select>
-                </div>
-              </div>
-
-              {/* Base price for per_km */}
-              {form.pricing_type === 'per_km' && (
+        <Portal>
+          <div className={styles.formOverlay} onClick={(e) => { if (e.target === e.currentTarget) resetForm() }}>
+            <div className={styles.formCard}>
+              <h2>{editId ? 'Editar Serviço' : 'Novo Serviço'}</h2>
+              <form onSubmit={handleSubmit} className={styles.form}>
                 <div className="input-group">
-                  <label htmlFor="basePrice">Taxa base / saída (R$)</label>
-                  <input id="basePrice" className="input" type="number" step="0.01" min="0" placeholder="Ex: 15,00 (cobrado independente da distância)" value={form.base_price} onChange={e => setForm({ ...form, base_price: e.target.value })} />
-                  <small style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
-                    Valor fixo cobrado além do preço por km (taxa de saída, por exemplo)
-                  </small>
+                  <label htmlFor="serviceName">Nome do serviço *</label>
+                  <input id="serviceName" className="input" placeholder="Ex: Entrega expressa" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
                 </div>
-              )}
-
-              <div className="input-group">
-                <label htmlFor="serviceCategory">Categoria</label>
-                <input id="serviceCategory" className="input" placeholder="Ex: Entrega, Manutenção" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
-              </div>
-              <div className={styles.formActions}>
-                <button type="button" className="btn btn-ghost" onClick={resetForm}>Cancelar</button>
-                <button type="submit" className="btn btn-accent" disabled={saving}>
-                  {saving ? <span className="spinner" /> : editId ? 'Atualizar' : 'Criar Serviço'}
-                </button>
-              </div>
-            </form>
+                <div className="input-group">
+                  <label htmlFor="serviceDesc">Descrição</label>
+                  <input id="serviceDesc" className="input" placeholder="Detalhes do serviço" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+                </div>
+  
+                {/* Pricing Type Selection */}
+                <div className="input-group">
+                  <label>Tipo de precificação *</label>
+                  <div className={styles.pricingGrid}>
+                    {PRICING_TYPES.map((pt) => (
+                      <button
+                        key={pt.value}
+                        type="button"
+                        className={`${styles.pricingBtn} ${form.pricing_type === pt.value ? styles.pricingSelected : ''}`}
+                        onClick={() => handlePricingTypeChange(pt.value)}
+                      >
+                        <strong>{pt.label}</strong>
+                        <small>{pt.desc}</small>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+  
+                {/* Pricing Fields */}
+                <div className={styles.formRow}>
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label htmlFor="servicePrice">
+                      {form.pricing_type === 'per_km' ? 'Preço por km (R$) *' : 'Preço unitário (R$) *'}
+                    </label>
+                    <input id="servicePrice" className="input" type="number" step="0.01" min="0" placeholder="0,00" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} />
+                  </div>
+                  <div className="input-group" style={{ flex: 1 }}>
+                    <label htmlFor="serviceUnit">Unidade *</label>
+                    <select id="serviceUnit" className="input" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}>
+                      {(UNITS[form.pricing_type] || UNITS['fixed']).map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
+                  </div>
+                </div>
+  
+                {/* Base price for per_km */}
+                {form.pricing_type === 'per_km' && (
+                  <div className="input-group">
+                    <label htmlFor="basePrice">Taxa base / saída (R$)</label>
+                    <input id="basePrice" className="input" type="number" step="0.01" min="0" placeholder="Ex: 15,00 (cobrado independente da distância)" value={form.base_price} onChange={e => setForm({ ...form, base_price: e.target.value })} />
+                    <small style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                      Valor fixo cobrado além do preço por km (taxa de saída, por exemplo)
+                    </small>
+                  </div>
+                )}
+  
+                <div className="input-group">
+                  <label htmlFor="serviceCategory">Categoria</label>
+                  <input id="serviceCategory" className="input" placeholder="Ex: Entrega, Manutenção" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} />
+                </div>
+                <div className={styles.formActions}>
+                  <button type="button" className="btn btn-ghost" onClick={resetForm}>Cancelar</button>
+                  <button type="submit" className="btn btn-accent" disabled={saving}>
+                    {saving ? <span className="spinner" /> : editId ? 'Atualizar' : 'Criar Serviço'}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </Portal>
       )}
 
       {/* Service list */}
