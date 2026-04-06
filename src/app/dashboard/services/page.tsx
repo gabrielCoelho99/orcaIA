@@ -136,6 +136,7 @@ export default function ServicesPage() {
 
       if (error) {
         console.error('Erro ao salvar serviço:', error)
+        alert(`Erro de banco de dados: ${error.message} (Detalhes: ${JSON.stringify(error)})`)
         toast.error(`Erro ao salvar: ${error.message}`)
         return
       }
@@ -143,8 +144,9 @@ export default function ServicesPage() {
       resetForm()
       fetchServices()
       toast.success(editId ? 'Serviço atualizado!' : 'Serviço criado com sucesso!')
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erro inesperado:', err)
+      alert(`Erro inesperado no Javascript: ${err?.message || JSON.stringify(err)}`)
       toast.error('Erro inesperado ao salvar o serviço.')
     } finally {
       setSaving(false)
