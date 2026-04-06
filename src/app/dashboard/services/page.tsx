@@ -216,7 +216,7 @@ export default function ServicesPage() {
             <form onSubmit={handleSubmit} className={styles.form}>
               <div className="input-group">
                 <label htmlFor="serviceName">Nome do serviço *</label>
-                <input id="serviceName" className="input" placeholder="Ex: Entrega expressa" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required />
+                <input id="serviceName" className="input" placeholder="Ex: Entrega expressa" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
               </div>
               <div className="input-group">
                 <label htmlFor="serviceDesc">Descrição</label>
@@ -247,7 +247,7 @@ export default function ServicesPage() {
                   <label htmlFor="servicePrice">
                     {form.pricing_type === 'per_km' ? 'Preço por km (R$) *' : 'Preço unitário (R$) *'}
                   </label>
-                  <input id="servicePrice" className="input" type="number" step="0.01" min="0" placeholder="0,00" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} required />
+                  <input id="servicePrice" className="input" type="number" step="0.01" min="0" placeholder="0,00" value={form.unit_price} onChange={e => setForm({ ...form, unit_price: e.target.value })} />
                 </div>
                 <div className="input-group" style={{ flex: 1 }}>
                   <label htmlFor="serviceUnit">Unidade *</label>
