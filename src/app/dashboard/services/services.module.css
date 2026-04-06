@@ -3,12 +3,11 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
-  display: flex;
-  align-items: flex-start; /* Prevent top cropping */
-  justify-content: center;
   z-index: var(--z-modal);
-  padding: 5vh var(--space-lg);
-  overflow-y: auto; /* Let overlay scroll */
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2xl) var(--space-lg);
+  overflow-y: auto;
 }
 
 .formCard {
@@ -18,7 +17,8 @@
   padding: var(--space-2xl);
   width: 100%;
   max-width: 540px;
-  margin: auto; /* Center reliably without top-cutoff */
+  margin: auto; /* Centers when container is taller than content */
+  flex-shrink: 0; /* Prevents squishing and allows natural height for scrolling */
   animation: fadeIn 0.3s ease;
 }
 
