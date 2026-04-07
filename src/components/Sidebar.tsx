@@ -69,12 +69,14 @@ export function Sidebar({
   userName, 
   companyName, 
   activeCompanyId, 
-  userCompanies 
+  userCompanies,
+  avatarUrl,
 }: { 
   userName: string, 
   companyName: string,
   activeCompanyId?: string,
-  userCompanies?: { id: string, name: string }[]
+  userCompanies?: { id: string, name: string }[],
+  avatarUrl?: string | null,
 }) {
   const pathname = usePathname()
   const router = useRouter()
@@ -99,6 +101,13 @@ export function Sidebar({
     window.location.reload()
   }
 
+  const avatarElement = avatarUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={avatarUrl} alt={userName} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+  ) : (
+    companyName.charAt(0).toUpperCase()
+  )
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.sidebarHeader}>
@@ -115,7 +124,7 @@ export function Sidebar({
           {userCompanies && userCompanies.length > 1 ? (
             <div className={styles.switcherContainer}>
               <div className={styles.companyAvatar}>
-                {companyName.charAt(0).toUpperCase()}
+                {avatarElement}
               </div>
               <div className={styles.switcherWrapper}>
                 <select 
@@ -137,7 +146,7 @@ export function Sidebar({
           ) : (
             <div className={styles.singleCompany}>
               <div className={styles.companyAvatar}>
-                {companyName.charAt(0).toUpperCase()}
+                {avatarElement}
               </div>
               <span className={styles.companyName}>{companyName}</span>
             </div>

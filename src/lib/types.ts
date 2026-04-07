@@ -16,6 +16,7 @@ export interface Profile {
   id: string
   full_name: string
   email: string
+  avatar_url: string | null
   company_id: string | null
   role: 'owner' | 'admin' | 'member'
   created_at: string

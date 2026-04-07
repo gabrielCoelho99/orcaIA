@@ -64,6 +64,7 @@ export default function OnboardingPage() {
         business_type: businessType,
         phone: phone.trim() || null,
         address: address.trim() || null,
+        owner_id: user.id,
       })
       .select()
       .single()

@@ -152,9 +152,16 @@ export default function QuoteDetailPage() {
     }
   }
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!quote || !company) return
-    generateQuotePDF(quote, items, company)
+    // Fetch avatar/logo from the user's profile
+    const { data: { user } } = await supabase.auth.getUser()
+    let logoUrl: string | null = null
+    if (user) {
+      const { data: prof } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single()
+      logoUrl = prof?.avatar_url || company.logo_url || null
+    }
+    generateQuotePDF(quote, items, company, logoUrl)
   }
 
   const handleStatusChange = async (status: string) => {

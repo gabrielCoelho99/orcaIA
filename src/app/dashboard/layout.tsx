@@ -18,7 +18,7 @@ export default async function DashboardLayout({
     .from('profiles')
     .select('*, companies(*)')
     .eq('id', user.id)
-    .single() as { data: { full_name: string; company_id: string; companies: { id: string; name: string } } | null }
+    .single() as { data: { full_name: string; company_id: string; avatar_url: string | null; companies: { id: string; name: string } } | null }
 
   if (!profile?.company_id) redirect('/onboarding')
 
@@ -43,6 +43,7 @@ export default async function DashboardLayout({
         companyName={currentCompany?.name || 'Minha Empresa'}
         activeCompanyId={currentCompany?.id || ''}
         userCompanies={userCompanies}
+        avatarUrl={profile.avatar_url}
       />
       <main className={styles.mainContent}>
         {children}

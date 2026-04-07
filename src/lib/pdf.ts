@@ -9,7 +9,7 @@ interface jsPDFWithAutoTable extends jsPDF {
   }
 }
 
-export function generateQuotePDF(quote: Quote, items: QuoteItem[], company: Company) {
+export function generateQuotePDF(quote: Quote, items: QuoteItem[], company: Company, logoUrl?: string | null) {
   const doc = new jsPDF()
 
   // Colors
@@ -21,17 +21,28 @@ export function generateQuotePDF(quote: Quote, items: QuoteItem[], company: Comp
   doc.setFillColor(...primary)
   doc.rect(0, 0, 210, 35, 'F')
 
+  // Logo (if available)
+  let textStartX = 14
+  if (logoUrl) {
+    try {
+      doc.addImage(logoUrl, 'JPEG', 14, 5, 25, 25)
+      textStartX = 44
+    } catch {
+      // Logo failed to load, continue without it
+    }
+  }
+
   // Company name
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(20)
   doc.setFont('helvetica', 'bold')
-  doc.text(company.name || 'Minha Empresa', 14, 18)
+  doc.text(company.name || 'Minha Empresa', textStartX, 18)
 
   // Company info
   doc.setFontSize(9)
   doc.setFont('helvetica', 'normal')
   const companyInfo = [company.phone, company.email, company.address].filter(Boolean).join(' | ')
-  if (companyInfo) doc.text(companyInfo, 14, 27)
+  if (companyInfo) doc.text(companyInfo, textStartX, 27)
 
   // Quote label
   doc.setTextColor(...dark)

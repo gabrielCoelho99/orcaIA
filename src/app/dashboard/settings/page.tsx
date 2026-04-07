@@ -16,7 +16,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('company')
   const [company, setCompany] = useState<Company | null>(null)
   const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [profile, setProfile] = useState<{ full_name: string; email: string } | null>(null)
+  const [profile, setProfile] = useState<{ full_name: string; email: string; avatar_url: string | null } | null>(null)
   const [ownedCompanies, setOwnedCompanies] = useState<Company[]>([])
   const [servicesCount, setServicesCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -26,9 +26,11 @@ export default function SettingsPage() {
   const { toast } = useToast()
   const router = useRouter()
 
-  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', email: '', address: '', business_type: '', cnpj: '', logo_url: '', quote_template_url: '' })
-  const [profileForm, setProfileForm] = useState({ full_name: '' })
+  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', email: '', address: '', business_type: '', cnpj: '' })
+  const [profileForm, setProfileForm] = useState({ full_name: '', avatar_url: '' })
   const [uploading, setUploading] = useState(false)
+  const [showNewCompanyForm, setShowNewCompanyForm] = useState(false)
+  const [newCompanyForm, setNewCompanyForm] = useState({ name: '', business_type: '' })
 
   useEffect(() => {
     const fetchData = async () => {
@@ -37,14 +39,14 @@ export default function SettingsPage() {
 
       const { data: prof } = await supabase
         .from('profiles')
-        .select('full_name, email, company_id')
+        .select('full_name, email, company_id, avatar_url')
         .eq('id', user.id)
         .single()
 
       if (!prof?.company_id) return
 
-      setProfile({ full_name: prof.full_name, email: prof.email })
-      setProfileForm({ full_name: prof.full_name })
+      setProfile({ full_name: prof.full_name, email: prof.email, avatar_url: prof.avatar_url })
+      setProfileForm({ full_name: prof.full_name, avatar_url: prof.avatar_url || '' })
 
       const [{ data: comp }, { data: owned }, sub, { count }] = await Promise.all([
         supabase.from('companies').select('*').eq('id', prof.company_id).single(),
@@ -62,8 +64,6 @@ export default function SettingsPage() {
           address: comp.address || '',
           business_type: comp.business_type || '',
           cnpj: comp.cnpj || '',
-          logo_url: comp.logo_url || '',
-          quote_template_url: comp.quote_template_url || '',
         })
       }
       setOwnedCompanies((owned || []) as Company[])
@@ -85,8 +85,6 @@ export default function SettingsPage() {
       address: companyForm.address.trim() || null,
       business_type: companyForm.business_type.trim(),
       cnpj: companyForm.cnpj.trim() || null,
-      logo_url: companyForm.logo_url.trim() || null,
-      quote_template_url: companyForm.quote_template_url.trim() || null,
     }).eq('id', company.id)
 
     if (error) toast.error(`Erro: ${error.message}`)
@@ -103,12 +101,13 @@ export default function SettingsPage() {
     setSaving(true)
     const { error } = await supabase.from('profiles').update({
       full_name: profileForm.full_name.trim(),
+      avatar_url: profileForm.avatar_url.trim() || null,
     }).eq('id', user.id)
 
     if (error) toast.error(`Erro: ${error.message}`)
     else {
       toast.success('Perfil atualizado!')
-      setProfile(prev => prev ? { ...prev, full_name: profileForm.full_name } : null)
+      setProfile(prev => prev ? { ...prev, full_name: profileForm.full_name, avatar_url: profileForm.avatar_url || null } : null)
     }
     setSaving(false)
   }
@@ -118,30 +117,74 @@ export default function SettingsPage() {
     router.push('/login')
   }
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, bucket: 'company_assets' | 'company_templates', field: 'logo_url' | 'quote_template_url') => {
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file || !company) return;
+    if (!file) return;
 
     setUploading(true);
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setUploading(false); return }
+
     const fileExt = file.name.split('.').pop()
-    const fileName = `${company.id}-${Date.now()}.${fileExt}`
+    const fileName = `avatar-${user.id}-${Date.now()}.${fileExt}`
     
     try {
-      const { error: uploadError } = await supabase.storage.from(bucket).upload(fileName, file)
+      const { error: uploadError } = await supabase.storage.from('company_assets').upload(fileName, file, { upsert: true })
       if (uploadError) throw uploadError
 
-      const fileUrl = bucket === 'company_assets' 
-        ? supabase.storage.from(bucket).getPublicUrl(fileName).data.publicUrl
-        : fileName; // Save path for private buckets
+      const fileUrl = supabase.storage.from('company_assets').getPublicUrl(fileName).data.publicUrl
 
-      setCompanyForm(prev => ({ ...prev, [field]: fileUrl }))
-      toast.success('Arquivo carregado! Não esqueça de Salvar.')
+      setProfileForm(prev => ({ ...prev, avatar_url: fileUrl }))
+      toast.success('Foto carregada! Não esqueça de Salvar.')
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : 'Erro desconhecido'
       toast.error(`Erro no upload: ${msg}`)
     } finally {
       setUploading(false)
     }
+  }
+
+  const handleCreateAgencyCompany = async () => {
+    if (!newCompanyForm.name.trim() || !newCompanyForm.business_type.trim()) {
+      toast.error('Preencha o nome e tipo de negócio.')
+      return
+    }
+    if (ownedCompanies.length >= 5) {
+      toast.error('Limite de 5 empresas atingido no plano Agência.')
+      return
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    setSaving(true)
+    const { data: newCompany, error: createError } = await supabase.from('companies').insert({
+      name: newCompanyForm.name.trim(),
+      business_type: newCompanyForm.business_type.trim(),
+      owner_id: user.id,
+    }).select().single()
+
+    if (createError || !newCompany) {
+      toast.error(`Erro: ${createError?.message || 'Falha ao criar empresa'}`)
+      setSaving(false)
+      return
+    }
+
+    // Create subscription with agency plan (inherits agency privileges)
+    await supabase.from('subscriptions').insert({
+      company_id: newCompany.id,
+      plan: 'agency',
+      status: 'active',
+      quotes_limit: 999999,
+      services_limit: 999999,
+    })
+
+    // Update local state without switching active company
+    setOwnedCompanies(prev => [...prev, newCompany as Company])
+    setNewCompanyForm({ name: '', business_type: '' })
+    setShowNewCompanyForm(false)
+    toast.success(`Empresa "${newCompany.name}" criada! Use o seletor na sidebar para alternar.`)
+    setSaving(false)
   }
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: '4rem' }}><span className="spinner" /></div>
@@ -214,62 +257,56 @@ export default function SettingsPage() {
               <input className="input" value={companyForm.cnpj} onChange={e => setCompanyForm(p => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0001-00" />
             </div>
             
-            {plan !== 'free' && (
-              <>
-                <div className={`input-group ${styles.formGridFull}`}>
-                  <label>Logo da Empresa <span className={styles.proBadge}>Pro/Agência</span></label>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {companyForm.logo_url && <img src={companyForm.logo_url} alt="Logo" style={{ height: '40px', borderRadius: '4px' }} />}
-                    <input type="file" accept="image/png, image/jpeg" onChange={e => handleFileUpload(e, 'company_assets', 'logo_url')} disabled={uploading} />
-                  </div>
-                  <small style={{color: 'var(--text-tertiary)', fontSize: '0.75rem', marginTop: '4px'}}>
-                    Faça o upload da sua logo (PNG/JPG) para aparecer em seus orçamentos PDF/Online.
-                  </small>
-                </div>
-
-                <div className={`input-group ${styles.formGridFull}`}>
-                  <label>Modelo Base de Orçamento <span className={styles.proBadge}>Pro/Agência</span></label>
-                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                    {companyForm.quote_template_url && <span style={{fontSize: '0.875rem', color: 'var(--accent-primary)'}}>Arquivo anexado: {companyForm.quote_template_url}</span>}
-                    <input type="file" accept=".pdf,.doc,.docx" onChange={e => handleFileUpload(e, 'company_templates', 'quote_template_url')} disabled={uploading} />
-                  </div>
-                  <small style={{color: 'var(--text-tertiary)', fontSize: '0.75rem', marginTop: '4px'}}>
-                    Faça o upload do seu timbrado ou modelo base em PDF/Word. A IA utilizará este arquivo como referência.
-                  </small>
-                </div>
-              </>
-            )}
           </div>
+
+          {/* Coming Soon: Quote Builder */}
+          {plan !== 'free' && (
+            <div style={{ marginTop: 'var(--space-lg)', padding: '1.5rem', background: 'rgba(10, 102, 194, 0.05)', border: '1px dashed rgba(10, 102, 194, 0.3)', borderRadius: 'var(--radius-lg)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '1.25rem' }}>🧱</span>
+                <h4 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)' }}>Construtor de Orçamentos</h4>
+                <span className={styles.proBadge} style={{ background: 'rgba(10, 102, 194, 0.15)', color: 'var(--accent-secondary)' }}>Em Breve</span>
+              </div>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                Monte seus orçamentos arrastando blocos: cabeçalho, tabelas de itens, condições, assinatura e mais. Estilo Wordpress/Scratch para criar modelos personalizados.
+              </p>
+            </div>
+          )}
+
           <div className={styles.formActions} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             {plan === 'agency' ? (
-              <button 
-                className="btn btn-ghost" 
-                onClick={async () => {
-                  const { data: { user } } = await supabase.auth.getUser()
-                  if (!user) return
-                  setSaving(true)
-                  const { data: newCompany, error: createError } = await supabase.from('companies').insert({
-                    name: 'Nova Empresa',
-                    owner_id: user.id
-                  }).select().single()
-                  if (createError) {
-                    toast.error(`Erro: ${createError.message}`)
-                    setSaving(false)
-                    return
-                  }
-                  await supabase.from('subscriptions').insert({
-                    company_id: newCompany.id,
-                    plan: 'free',
-                    status: 'active'
-                  })
-                  await supabase.from('profiles').update({ company_id: newCompany.id }).eq('id', user.id)
-                  window.location.reload()
-                }} 
-                disabled={saving}
-              >
-                + Cadastrar nova empresa
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                {!showNewCompanyForm ? (
+                  <button 
+                    className="btn btn-ghost" 
+                    onClick={() => setShowNewCompanyForm(true)}
+                    disabled={saving || ownedCompanies.length >= 5}
+                  >
+                    + Cadastrar nova empresa ({ownedCompanies.length}/5)
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', padding: '1rem', background: 'var(--bg-tertiary)', borderRadius: 'var(--radius-md)', minWidth: '280px' }}>
+                    <input 
+                      className="input" 
+                      placeholder="Nome da empresa" 
+                      value={newCompanyForm.name} 
+                      onChange={e => setNewCompanyForm(p => ({ ...p, name: e.target.value }))} 
+                    />
+                    <input 
+                      className="input" 
+                      placeholder="Tipo de negócio (ex: oficina)" 
+                      value={newCompanyForm.business_type} 
+                      onChange={e => setNewCompanyForm(p => ({ ...p, business_type: e.target.value }))} 
+                    />
+                    <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => setShowNewCompanyForm(false)}>Cancelar</button>
+                      <button className="btn btn-accent btn-sm" onClick={handleCreateAgencyCompany} disabled={saving}>
+                        {saving ? <span className="spinner" /> : 'Criar'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : <div />}
             <button className="btn btn-accent" onClick={handleSaveCompany} disabled={saving || uploading}>
               {saving ? <span className="spinner" /> : 'Salvar'}
@@ -283,9 +320,29 @@ export default function SettingsPage() {
         <div className={styles.sectionCard}>
           <h3 className={styles.sectionTitle}>Seu Perfil</h3>
           <div className={styles.formGrid}>
+            {/* Avatar Upload */}
+            <div className={`input-group ${styles.formGridFull}`}>
+              <label>Foto / Logo</label>
+              <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--bg-tertiary)', border: '2px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  {profileForm.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profileForm.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <span style={{ fontSize: '1.75rem', color: 'var(--text-tertiary)' }}>{profile?.full_name?.charAt(0)?.toUpperCase() || '?'}</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <input type="file" accept="image/png, image/jpeg, image/webp" onChange={handleAvatarUpload} disabled={uploading} style={{ fontSize: '0.8125rem' }} />
+                  <small style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem' }}>
+                    Sua foto ou logo aparecerá na sidebar e nos orçamentos em PDF.
+                  </small>
+                </div>
+              </div>
+            </div>
             <div className="input-group">
               <label>Nome completo</label>
-              <input className="input" value={profileForm.full_name} onChange={e => setProfileForm({ full_name: e.target.value })} />
+              <input className="input" value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} />
             </div>
             <div className="input-group">
               <label>E-mail</label>
@@ -294,7 +351,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <div className={styles.formActions}>
-            <button className="btn btn-accent" onClick={handleSaveProfile} disabled={saving}>
+            <button className="btn btn-accent" onClick={handleSaveProfile} disabled={saving || uploading}>
               {saving ? <span className="spinner" /> : 'Salvar'}
             </button>
           </div>
