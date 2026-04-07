@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import styles from '../login/auth.module.css'
 
@@ -12,7 +11,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
+  const [emailSent, setEmailSent] = useState(false)
   const supabase = createClient()
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -26,7 +25,7 @@ export default function SignupPage() {
       return
     }
 
-    const { data, error: signupError } = await supabase.auth.signUp({
+    const { error: signupError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -44,13 +43,66 @@ export default function SignupPage() {
       return
     }
 
-    if (data.user) {
-      // Profile is auto-created by database trigger.
-      // Small delay to ensure trigger has fired before redirect.
-      await new Promise(r => setTimeout(r, 500))
-      router.push('/onboarding')
-      router.refresh()
-    }
+    setEmailSent(true)
+    setLoading(false)
+  }
+
+  if (emailSent) {
+    return (
+      <div className={styles.authPage}>
+        <div className={styles.authGlow} />
+        <div className={styles.authCard}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: 'rgba(0, 212, 170, 0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 1.5rem',
+              fontSize: '1.75rem',
+            }}>
+              ✉️
+            </div>
+            <h1 style={{ marginBottom: '0.75rem' }}>Verifique seu email</h1>
+            <p className={styles.authSubtext} style={{ marginBottom: '1.5rem', lineHeight: '1.6' }}>
+              Enviamos um link de confirmação para<br />
+              <strong style={{ color: 'var(--accent-primary)' }}>{email}</strong>
+            </p>
+
+            <div style={{
+              background: 'rgba(0, 212, 170, 0.06)',
+              border: '1px solid rgba(0, 212, 170, 0.15)',
+              borderRadius: 'var(--radius-lg)',
+              padding: '1.25rem',
+              marginBottom: '1.5rem',
+              textAlign: 'left',
+            }}>
+              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: '1.7', margin: 0 }}>
+                <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '0.5rem' }}>📋 Próximos passos:</strong>
+                1. Abra sua caixa de entrada (ou spam)<br />
+                2. Clique no link de confirmação<br />
+                3. Faça login e configure sua empresa
+              </p>
+            </div>
+
+            <Link 
+              href="/login" 
+              className="btn btn-accent btn-lg" 
+              style={{ width: '100%', display: 'inline-flex', justifyContent: 'center', textDecoration: 'none' }}
+            >
+              Ir para o Login
+            </Link>
+
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-tertiary)', marginTop: '1rem' }}>
+              Não recebeu? Verifique a pasta de spam ou tente novamente.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

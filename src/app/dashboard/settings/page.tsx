@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import { getSubscription } from '@/lib/subscription'
@@ -26,7 +27,7 @@ export default function SettingsPage() {
   const { toast } = useToast()
   const router = useRouter()
 
-  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', email: '', address: '', business_type: '', cnpj: '' })
+  const [companyForm, setCompanyForm] = useState({ name: '', phone: '', email: '', address: '', business_type: '', cnpj: '', instagram: '', facebook: '', whatsapp: '', website: '' })
   const [profileForm, setProfileForm] = useState({ full_name: '', avatar_url: '' })
   const [uploading, setUploading] = useState(false)
   const [showNewCompanyForm, setShowNewCompanyForm] = useState(false)
@@ -64,6 +65,10 @@ export default function SettingsPage() {
           address: comp.address || '',
           business_type: comp.business_type || '',
           cnpj: comp.cnpj || '',
+          instagram: comp.instagram || '',
+          facebook: comp.facebook || '',
+          whatsapp: comp.whatsapp || '',
+          website: comp.website || '',
         })
       }
       setOwnedCompanies((owned || []) as Company[])
@@ -85,6 +90,10 @@ export default function SettingsPage() {
       address: companyForm.address.trim() || null,
       business_type: companyForm.business_type.trim(),
       cnpj: companyForm.cnpj.trim() || null,
+      instagram: companyForm.instagram.trim() || null,
+      facebook: companyForm.facebook.trim() || null,
+      whatsapp: companyForm.whatsapp.trim() || null,
+      website: companyForm.website.trim() || null,
     }).eq('id', company.id)
 
     if (error) toast.error(`Erro: ${error.message}`)
@@ -171,13 +180,22 @@ export default function SettingsPage() {
     }
 
     // Create subscription with agency plan (inherits agency privileges)
-    await supabase.from('subscriptions').insert({
+    const { error: subError } = await supabase.from('subscriptions').insert({
       company_id: newCompany.id,
       plan: 'agency',
       status: 'active',
       quotes_limit: 999999,
       services_limit: 999999,
+      quotes_used_this_month: 0,
     })
+
+    if (subError) {
+      // Rollback: delete the company if subscription failed
+      await supabase.from('companies').delete().eq('id', newCompany.id)
+      toast.error(`Erro ao configurar plano: ${subError.message}`)
+      setSaving(false)
+      return
+    }
 
     // Update local state without switching active company
     setOwnedCompanies(prev => [...prev, newCompany as Company])
@@ -256,21 +274,42 @@ export default function SettingsPage() {
               <label>CNPJ <span className={styles.proBadge}>Opcional</span></label>
               <input className="input" value={companyForm.cnpj} onChange={e => setCompanyForm(p => ({ ...p, cnpj: e.target.value }))} placeholder="00.000.000/0001-00" />
             </div>
+
+            {/* Social Media Fields */}
+            <div className="input-group">
+              <label>Instagram</label>
+              <input className="input" value={companyForm.instagram} onChange={e => setCompanyForm(p => ({ ...p, instagram: e.target.value }))} placeholder="@suaempresa" />
+            </div>
+            <div className="input-group">
+              <label>Facebook</label>
+              <input className="input" value={companyForm.facebook} onChange={e => setCompanyForm(p => ({ ...p, facebook: e.target.value }))} placeholder="facebook.com/suaempresa" />
+            </div>
+            <div className="input-group">
+              <label>WhatsApp</label>
+              <input className="input" value={companyForm.whatsapp} onChange={e => setCompanyForm(p => ({ ...p, whatsapp: e.target.value }))} placeholder="(11) 99999-9999" />
+            </div>
+            <div className="input-group">
+              <label>Website</label>
+              <input className="input" value={companyForm.website} onChange={e => setCompanyForm(p => ({ ...p, website: e.target.value }))} placeholder="www.suaempresa.com" />
+            </div>
             
           </div>
 
-          {/* Coming Soon: Quote Builder */}
+          {/* Quote Builder Link */}
           {plan !== 'free' && (
-            <div style={{ marginTop: 'var(--space-lg)', padding: '1.5rem', background: 'rgba(10, 102, 194, 0.05)', border: '1px dashed rgba(10, 102, 194, 0.3)', borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                <span style={{ fontSize: '1.25rem' }}>🧱</span>
-                <h4 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)' }}>Construtor de Orçamentos</h4>
-                <span className={styles.proBadge} style={{ background: 'rgba(10, 102, 194, 0.15)', color: 'var(--accent-secondary)' }}>Em Breve</span>
+            <Link href="/dashboard/settings/quote-builder" style={{ textDecoration: 'none', display: 'block', marginTop: 'var(--space-lg)' }}>
+              <div style={{ padding: '1.5rem', background: 'rgba(10, 102, 194, 0.05)', border: '1px solid rgba(10, 102, 194, 0.2)', borderRadius: 'var(--radius-lg)', cursor: 'pointer', transition: 'all 0.15s ease' }} onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--accent-primary)')} onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(10, 102, 194, 0.2)')}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: '1.25rem' }}>🧱</span>
+                  <h4 style={{ fontSize: '0.9375rem', fontWeight: 700, color: 'var(--text-primary)' }}>Construtor de Orçamentos</h4>
+                  <span className={styles.proBadge} style={{ background: 'rgba(0, 212, 170, 0.15)', color: 'var(--accent-secondary)' }}>Pro</span>
+                </div>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '0.75rem' }}>
+                  Monte seus orçamentos arrastando blocos: cabeçalho, tabelas de itens, fotos, condições, assinatura e mais.
+                </p>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--accent-primary)', fontWeight: 600 }}>Abrir editor →</span>
               </div>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                Monte seus orçamentos arrastando blocos: cabeçalho, tabelas de itens, condições, assinatura e mais. Estilo Wordpress/Scratch para criar modelos personalizados.
-              </p>
-            </div>
+            </Link>
           )}
 
           <div className={styles.formActions} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -483,7 +522,7 @@ export default function SettingsPage() {
                 <h4 className={styles.changelogTitle}>{item.title}</h4>
                 <p className={styles.changelogDesc}>{item.description}</p>
                 <ul className={styles.featureList}>
-                  {item.features.map((f, idx) => <li key={idx}>{f}</li>)}
+                  {item.features.map((f, idx) => <li key={idx}>{f.text}</li>)}
                 </ul>
               </div>
             ))}

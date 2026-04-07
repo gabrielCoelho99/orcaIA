@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import { generateQuotePDF } from '@/lib/pdf'
-import type { Quote, QuoteItem, Company } from '@/lib/types'
+import { generateQuotePDFFromLayout } from '@/lib/pdf-blocks'
+import type { Quote, QuoteItem, Company, QuoteLayout } from '@/lib/types'
 import styles from './quote.module.css'
 
 export default function QuoteDetailPage() {
@@ -161,7 +162,15 @@ export default function QuoteDetailPage() {
       const { data: prof } = await supabase.from('profiles').select('avatar_url').eq('id', user.id).single()
       logoUrl = prof?.avatar_url || company.logo_url || null
     }
-    generateQuotePDF(quote, items, company, logoUrl)
+
+    // Use custom layout if available, otherwise fallback to default PDF
+    if (company.quote_layout) {
+      const layout = company.quote_layout as QuoteLayout
+      const doc = generateQuotePDFFromLayout(layout, company, quote, items, logoUrl)
+      doc.save(`orcamento_${quote.client_name.replace(/\s+/g, '_')}.pdf`)
+    } else {
+      generateQuotePDF(quote, items, company, logoUrl)
+    }
   }
 
   const handleStatusChange = async (status: string) => {
