@@ -115,17 +115,22 @@ export default function Home() {
             </div>
             {/* Pro Card */}
             <div className={`${styles.priceCard} ${styles.popular}`}>
-              <div className={styles.popularBadge}>Mais Popular</div>
+              <div className={styles.popularBadge}>🔥 Promoção</div>
               <h3>Profissional</h3>
-              <div className={styles.priceValue}>R$ 49,90<span>/mês</span></div>
+              <div className={styles.promoBlock}>
+                <span className={styles.priceOld}>R$ 49,90</span>
+                <div className={styles.priceValue}>R$ 34,99<span>/mês</span></div>
+                <span className={styles.promoNote}>nos 3 primeiros meses</span>
+              </div>
               <ul className={styles.priceFeatures}>
                 <li>Orçamentos ilimitados</li>
                 <li>Serviços ilimitados</li>
                 <li>Chat com IA avançado</li>
                 <li>Logo personalizada no PDF</li>
+                <li>Construtor de Orçamentos em Blocos</li>
                 <li>Suporte prioritário</li>
               </ul>
-              <Link href="/signup" className="btn btn-accent w-full">Assinar Pro</Link>
+              <Link href="/signup" className="btn btn-accent w-full">Começar por R$ 34,99</Link>
             </div>
             {/* Agency Card */}
             <div className={`${styles.priceCard} ${styles.agency}`}>

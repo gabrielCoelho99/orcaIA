@@ -43,10 +43,10 @@ export async function POST(req: NextRequest) {
       body: {
         items: [
           {
-            id: 'orcaia_pro_1m',
-            title: 'OrcaIA - Plano Profissional (1 Mês)',
+            id: 'orcaia_pro_1m_promo',
+            title: 'OrcaIA - Plano Profissional (Promoção - 3 primeiros meses)',
             quantity: 1,
-            unit_price: 49.90,
+            unit_price: 34.99,
             currency_id: 'BRL',
           }
         ],

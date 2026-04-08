@@ -409,10 +409,25 @@ export default function SettingsPage() {
                 {plan === key && <span className={styles.planBadge}>Atual</span>}
                 {key === 'pro' && plan !== 'pro' && <span className={styles.planBadgePopular}>Recomendado</span>}
                 <div className={styles.planName}>{details.name}</div>
-                <div className={styles.planPrice}>
-                  R$ {details.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
-                  <small>/mês</small>
-                </div>
+                {'promoPrice' in details && details.promoPrice ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
+                    <span style={{ fontSize: '0.875rem', color: 'var(--text-tertiary)', textDecoration: 'line-through', opacity: 0.6 }}>
+                      R$ {details.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                    <div className={styles.planPrice}>
+                      R$ {details.promoPrice.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
+                      <small>/mês</small>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-accent)' }}>
+                      {'promoLabel' in details ? (details as { promoLabel: string }).promoLabel : ''}
+                    </span>
+                  </div>
+                ) : (
+                  <div className={styles.planPrice}>
+                    R$ {details.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })} 
+                    <small>/mês</small>
+                  </div>
+                )}
                 <ul className={styles.planFeatures}>
                   {details.features.map(f => <li key={f}>{f}</li>)}
                 </ul>

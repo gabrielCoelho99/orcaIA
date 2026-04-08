@@ -255,6 +255,9 @@ export const PLAN_DETAILS = {
   pro: {
     name: 'Profissional',
     price: 49.90,
+    promoPrice: 34.99,
+    promoMonths: 3,
+    promoLabel: '3 primeiros meses',
     quotes_limit: 999999,
     services_limit: 999999,
     features: [

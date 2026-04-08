@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
@@ -56,9 +56,16 @@ export default function NewQuotePage() {
   const [quotaReached, setQuotaReached] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const messagesRef = useRef<Message[]>(messages)
+  const abortControllerRef = useRef<AbortController | null>(null)
   const router = useRouter()
   const supabase = createClient()
   const { toast } = useToast()
+
+  // Keep ref in sync with state to avoid stale closures
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -81,24 +88,34 @@ export default function NewQuotePage() {
     checkQuota()
   }, [])
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!input.trim() || isStreaming) return
 
     const userMessage = input.trim()
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
+
+    // Build the full message list using the ref to get fresh state
+    const currentMessages = messagesRef.current
+    const newUserMsg: Message = { role: 'user', content: userMessage }
+    const allMessages = [...currentMessages, newUserMsg]
+
+    // Update state to show user message immediately
+    setMessages(allMessages)
     setIsStreaming(true)
 
-    const allMessages = [
-      ...messages,
-      { role: 'user' as const, content: userMessage },
-    ]
+    // Cancel any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    const abortController = new AbortController()
+    abortControllerRef.current = abortController
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: allMessages }),
+        signal: abortController.signal,
       })
 
       if (!res.ok) {
@@ -145,6 +162,8 @@ export default function NewQuotePage() {
       const extracted = extractQuoteData(assistantContent)
       if (extracted) setQuoteData(extracted)
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return
+
       let errorMessage = '❌ Desculpe, ocorreu um erro. Tente novamente.'
       if (error instanceof Error) {
         if (error.message.includes('429') || error.message.includes('sobrecarregada')) {
@@ -158,9 +177,10 @@ export default function NewQuotePage() {
       })
     } finally {
       setIsStreaming(false)
+      abortControllerRef.current = null
       inputRef.current?.focus()
     }
-  }
+  }, [input, isStreaming])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
