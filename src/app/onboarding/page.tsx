@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { SEED_SERVICES } from '@/lib/data/seed-services'
 import styles from './onboarding.module.css'
 
 const BUSINESS_TYPES = [
@@ -21,6 +22,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [companyName, setCompanyName] = useState('')
   const [businessType, setBusinessType] = useState('')
+  const [customBusinessType, setCustomBusinessType] = useState('')
   const [phone, setPhone] = useState('')
   const [address, setAddress] = useState('')
   const [loading, setLoading] = useState(false)
@@ -30,6 +32,7 @@ export default function OnboardingPage() {
 
   const handleFinish = async () => {
     if (!companyName.trim() || !businessType) return
+    if (businessType === 'outro' && !customBusinessType.trim()) return
     setLoading(true)
     setError('')
 
@@ -57,11 +60,13 @@ export default function OnboardingPage() {
       })
     }
 
+    const finalBusinessType = businessType === 'outro' ? customBusinessType.trim() : businessType
+
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .insert({
         name: companyName.trim(),
-        business_type: businessType,
+        business_type: finalBusinessType,
         phone: phone.trim() || null,
         address: address.trim() || null,
         owner_id: user.id,
@@ -95,6 +100,25 @@ export default function OnboardingPage() {
       quotes_limit: 5,
       services_limit: 3,
     })
+
+    // Seed starter services based on business type
+    const seedKey = businessType === 'outro' ? null : businessType
+    const seedServices = seedKey ? SEED_SERVICES[seedKey] : null
+    if (seedServices && seedServices.length > 0) {
+      await supabase.from('services').insert(
+        seedServices.map(s => ({
+          company_id: company.id,
+          name: s.name,
+          description: s.description,
+          unit: s.unit,
+          unit_price: s.unit_price,
+          category: s.category,
+          pricing_type: s.pricing_type,
+          base_price: s.base_price || 0,
+          active: true,
+        }))
+      )
+    }
 
     router.push('/dashboard')
     router.refresh()
@@ -146,11 +170,29 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
+              {businessType === 'outro' && (
+                <div className="input-group">
+                  <label htmlFor="customBusiness">Qual é o ramo da sua empresa?</label>
+                  <input
+                    id="customBusiness"
+                    type="text"
+                    className="input"
+                    placeholder="Ex: Fotografia, Personal Trainer, Consultoria..."
+                    value={customBusinessType}
+                    onChange={(e) => setCustomBusinessType(e.target.value)}
+                    required
+                  />
+                  <small style={{ color: 'var(--text-tertiary)', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                    Isso ajuda a IA a entender melhor seu negócio
+                  </small>
+                </div>
+              )}
+
               <button
                 className="btn btn-accent btn-lg"
                 style={{ width: '100%' }}
                 onClick={() => setStep(2)}
-                disabled={!companyName.trim() || !businessType}
+                disabled={!companyName.trim() || !businessType || (businessType === 'outro' && !customBusinessType.trim())}
               >
                 Continuar
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
