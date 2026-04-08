@@ -2,12 +2,18 @@ import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { SupabaseClient } from '@supabase/supabase-js'
 import { NextRequest } from 'next/server'
-import { createRequire } from 'module'
-const require = createRequire(import.meta.url)
-const pdf = require('pdf-parse')
-import mammoth from 'mammoth'
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+if (!process.env.GROQ_API_KEY) {
+  console.error('⚠️ GROQ_API_KEY is not set!')
+}
+
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' })
+
+const MODELS = [
+  'llama-3.3-70b-versatile',
+  'llama3-70b-8192',
+  'llama3-8b-8192',
+]
 
 interface ServiceData {
   name: string
@@ -37,13 +43,26 @@ async function getTemplateText(supabase: SupabaseClient, path: string) {
     const buffer = Buffer.from(await fileData.arrayBuffer())
 
     if (path.toLowerCase().endsWith('.pdf')) {
-      const data = await pdf(buffer)
-      return data.text
+      try {
+        const { createRequire } = await import('module')
+        const require = createRequire(import.meta.url)
+        const pdfParse = require('pdf-parse')
+        const data = await pdfParse(buffer)
+        return data.text
+      } catch (e) {
+        console.error('pdf-parse unavailable, skipping template:', e)
+        return null
+      }
     } else if (path.toLowerCase().endsWith('.docx')) {
-      const result = await mammoth.extractRawText({ buffer })
-      return result.value
+      try {
+        const mammoth = await import('mammoth')
+        const result = await mammoth.extractRawText({ buffer })
+        return result.value
+      } catch (e) {
+        console.error('mammoth unavailable, skipping template:', e)
+        return null
+      }
     } else {
-      // Plain text
       return buffer.toString('utf-8')
     }
   } catch (err) {
@@ -191,19 +210,48 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const stream = await groq.chat.completions.create({
-      model: 'llama-3.3-70b-versatile',
-      messages: groqMessages,
-      temperature: 0.7,
-      max_tokens: 2048,
-      stream: true,
-    })
+    // Validate API key before making the call
+    if (!process.env.GROQ_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: 'Chave da IA não configurada. Verifique GROQ_API_KEY nas variáveis de ambiente.' }),
+        { status: 500, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Try models in fallback order
+    let stream: AsyncIterable<Groq.Chat.Completions.ChatCompletionChunk> | null = null
+    let lastError: Error | null = null
+
+    for (const model of MODELS) {
+      try {
+        stream = await groq.chat.completions.create({
+          model,
+          messages: groqMessages,
+          temperature: 0.7,
+          max_tokens: 2048,
+          stream: true,
+        })
+        break // success
+      } catch (modelError) {
+        console.error(`Model ${model} failed:`, modelError)
+        lastError = modelError instanceof Error ? modelError : new Error(String(modelError))
+        continue // try next model
+      }
+    }
+
+    if (!stream) {
+      const errMsg = lastError?.message || 'Nenhum modelo disponível'
+      return new Response(
+        JSON.stringify({ error: `IA indisponível: ${errMsg}` }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
 
     const encoder = new TextEncoder()
     const readable = new ReadableStream({
       async start(controller) {
         try {
-          for await (const chunk of stream) {
+          for await (const chunk of stream!) {
             const text = chunk.choices[0]?.delta?.content || ''
             if (text) {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text })}\n\n`))
@@ -235,12 +283,20 @@ export async function POST(req: NextRequest) {
 
     if (error instanceof Error) {
       const msg = error.message
+      console.error('Error details:', msg)
+
       if (msg.includes('429') || msg.toLowerCase().includes('rate')) {
         userMessage = 'A IA está sobrecarregada no momento. Aguarde alguns segundos e tente novamente.'
         status = 429
-      } else if (msg.includes('401') || msg.includes('api_key')) {
-        userMessage = 'Erro de autenticação com a IA. Verifique a API key.'
+      } else if (msg.includes('401') || msg.includes('api_key') || msg.includes('authentication')) {
+        userMessage = 'Erro de autenticação com a IA. A API key pode estar inválida ou expirada.'
         status = 500
+      } else if (msg.includes('model') || msg.includes('not found')) {
+        userMessage = 'Modelo de IA indisponível. Tente novamente em instantes.'
+        status = 503
+      } else {
+        // Include actual error for debugging in production
+        userMessage = `Erro na IA: ${msg.substring(0, 150)}`
       }
     }
 
